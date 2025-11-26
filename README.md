@@ -7,7 +7,6 @@ A lightweight Discord Rich Presence extension for Visual Studio Code with custom
 - 🎮 **Discord Rich Presence** - Show what you're working on in Discord
 - ⏱️ **Persistent Time Tracking** - Total time never resets when changing files
 - 🎨 **Custom App Icon** - Set your own icon via Discord application assets
-- 🔗 **Custom Button** - Add a button with custom text and URL
 - 🔄 **Auto-Updates** - Activity updates automatically when you switch files
 
 ## Setup
@@ -25,8 +24,6 @@ Open VS Code settings (`Cmd+,` or `Ctrl+,`) and search for "miyauw's simple disc
 
 - **Application ID** (required): Paste your Discord Application ID
 - **App Icon URL**: Name of the asset you uploaded (e.g., "vscode")
-- **Button Text**: Text for your custom button (e.g., "View Profile")
-- **Button URL**: URL for your custom button (e.g., "https://github.com/yourusername")
 - **Enabled**: Toggle the extension on/off
 
 ### 3. Enable Discord Activity
@@ -56,8 +53,6 @@ Once configured, the extension will automatically:
 {
   "simplerpc.applicationId": "1234567890123456789",
   "simplerpc.appIconUrl": "vscode",
-  "simplerpc.buttonText": "GitHub Profile",
-  "simplerpc.buttonUrl": "https://github.com/yourusername",
   "simplerpc.enabled": true
 }
 ```
@@ -73,25 +68,9 @@ Once configured, the extension will automatically:
 - Check that "Display current activity as a status message" is enabled in Discord settings
 - Try using the "miyauw's simple discord rpc: Reconnect" command
 
-### Custom icon not showing
-- Upload your image as an asset in your Discord application's "Rich Presence" section
-- Use the asset name (not the URL) in the `simplerpc.appIconUrl` setting
-
-### Buttons not working or causing timeout errors
-- **Good news**: This extension now uses `@xhayper/discord-rpc` which has full button support!
-- Button requirements:
-  - Button text must be 1-32 characters
-  - Button URL must start with `http://` or `https://`
-  - Maximum of 2 buttons allowed (this extension supports 1)
-- If buttons still don't work:
-  - Check the Output panel (View → Output → "miyauw's simple discord rpc") for error messages
-  - Verify your button text and URL meet the requirements above
-  - Try the "miyauw's simple discord rpc: Reconnect" command
-- The extension will automatically fall back to working without buttons if they fail
-
 ## License
 
-MIT
+GNU General Public License v3.0
 
 ## Contributing
 
