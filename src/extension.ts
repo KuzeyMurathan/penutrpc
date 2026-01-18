@@ -70,7 +70,7 @@ async function connectToDiscord() {
         return;
     }
 
-    const appId = config.get<string>('applicationId', '');
+    const appId = config.get<string>('applicationId', '')?.trim();
 
     if (!appId) {
         vscode.window.showWarningMessage(
@@ -86,16 +86,32 @@ async function connectToDiscord() {
 
     try {
         if (rpcClient) {
-            disconnectFromDiscord();
+            await disconnectFromDiscord();
+        }
+
+        console.log(`Peanut Presence: Attempting to connect with App ID: ${appId}`);
+
+        // Debug info for macOS connection issues
+        if (process.platform === 'darwin') {
+            const tempDir = process.env.TMPDIR || '/tmp';
+            console.log(`Peanut Presence (macOS Debug): TMPDIR is ${tempDir}`);
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const files = fs.readdirSync(tempDir);
+                const discordFiles = files.filter((f: string) => f.includes('discord-ipc'));
+                console.log(`Peanut Presence (macOS Debug): Found discord-ipc files in TMPDIR: ${discordFiles.join(', ') || 'None'}`);
+            } catch (e) {
+                console.log(`Peanut Presence (macOS Debug): Failed to read TMPDIR: ${e}`);
+            }
         }
 
         rpcClient = new Client({ clientId: appId });
 
         rpcClient.on('ready', () => {
-            console.log('Discord RPC connected!');
+            console.log('Peanut Presence: Discord RPC ready!');
             updateActivity();
 
-            // Update activity every 15 seconds to keep it fresh
             if (activityUpdateInterval) {
                 clearInterval(activityUpdateInterval);
             }
@@ -104,22 +120,41 @@ async function connectToDiscord() {
             }, 15000);
         });
 
+        rpcClient.on('connected', () => {
+            console.log('Peanut Presence: Connected to Discord socket');
+        });
+
         rpcClient.on('disconnected', () => {
-            console.log('Discord RPC disconnected');
+            console.log('Peanut Presence: Discord RPC disconnected');
             if (activityUpdateInterval) {
                 clearInterval(activityUpdateInterval);
                 activityUpdateInterval = null;
             }
         });
 
-        await rpcClient.login();
+        rpcClient.on('debug', (message) => {
+            console.log(`Peanut Presence (Debug): ${message}`);
+        });
+
+        // Use a timeout for the login process to prevent hanging
+        await Promise.race([
+            rpcClient.login(),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Connection timed out. Is Discord running?')), 10000)
+            )
+        ]);
+
     } catch (error) {
-        console.error('Failed to connect to Discord:', error);
+        console.error('Peanut Presence: Failed to connect:', error);
         vscode.window.showErrorMessage(`Peanut Presence: Failed to connect to Discord - ${error}`);
+
+        if (rpcClient) {
+            await disconnectFromDiscord();
+        }
     }
 }
 
-function disconnectFromDiscord() {
+async function disconnectFromDiscord() {
     if (activityUpdateInterval) {
         clearInterval(activityUpdateInterval);
         activityUpdateInterval = null;
@@ -127,13 +162,13 @@ function disconnectFromDiscord() {
 
     if (rpcClient) {
         try {
-            rpcClient.user?.clearActivity();
-            rpcClient.destroy();
+            await rpcClient.user?.clearActivity();
+            await rpcClient.destroy();
         } catch (e) {
-            console.error('Error during disconnect:', e);
+            console.error('Peanut Presence: Error during disconnect:', e);
         }
         rpcClient = null;
-        console.log('Disconnected from Discord RPC');
+        console.log('Peanut Presence: Disconnected');
     }
 }
 
@@ -167,6 +202,10 @@ async function updateActivity() {
     const smallImageKey = config.get<string>('smallImageKey', '');
     const smallImageText = config.get<string>('smallImageText', '');
 
+    // Get button configuration
+    const buttonLabel = config.get<string>('buttonLabel', '');
+    const buttonUrl = config.get<string>('buttonUrl', '');
+
     // Build base activity
     const activity: any = {
         details: editor ? `Editing ${fileName}` : 'Idle',
@@ -175,7 +214,16 @@ async function updateActivity() {
         largeImageKey: largeImageKey,
         largeImageText: largeImageText,
         instance: false,
+        type: 0
     };
+
+    // Add button if label and url are set
+    if (buttonLabel && buttonUrl) {
+        console.log(`Setting button: ${buttonLabel} -> ${buttonUrl}`);
+        activity.buttons = [
+            { label: buttonLabel, url: buttonUrl }
+        ];
+    }
 
     // Handle small image
     if (smallImageKey) {
@@ -189,6 +237,7 @@ async function updateActivity() {
     }
 
     try {
+        console.log('Final activity object:', JSON.stringify(activity, null, 2));
         // Set activity with a timeout to prevent hanging
         await Promise.race([
             rpcClient.user.setActivity(activity),

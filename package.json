@@ -2,11 +2,11 @@
   "name": "peanut-presence",
   "displayName": "Peanut Presence",
   "description": "A simple and customizable Discord Rich Presence extension for VS Code.",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "publisher": "peanutdev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KuzeyMurathan/peanut-presence.git"
+    "url": "https://github.com/KuzeyMurathan/miyauws-discord-rpc.git"
   },
   "engines": {
     "vscode": "^1.80.0"
@@ -57,6 +57,18 @@
           "default": true,
           "description": "Enable or disable Peanut Presence.",
           "order": 5
+        },
+        "peanutpresence.buttonLabel": {
+          "type": "string",
+          "default": "GitHub",
+          "description": "The label for the button on your Rich Presence.",
+          "order": 6
+        },
+        "peanutpresence.buttonUrl": {
+          "type": "string",
+          "default": "https://github.com/KuzeyMurathan/penutrpc/releases/tag/Release",
+          "description": "The URL for the button on your Rich Presence.",
+          "order": 7
         }
       }
     },
