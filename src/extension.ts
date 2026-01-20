@@ -189,6 +189,13 @@ async function updateActivity() {
         // Improved file name extraction
         fileName = document.fileName.replace(/\\/g, '/').split('/').pop() || 'Unknown file';
         fileType = document.languageId;
+
+        // Check if it's an image file
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
+        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+        if (imageExtensions.includes(fileExtension)) {
+            fileType = 'image';
+        }
     }
 
     // Get workspace name
